@@ -54,12 +54,16 @@ public class MessageService {
 
     @Async
     public void insertToRedis(Message msg) throws ParseException {
-        redisUtil.zsetAdd("history:" + msg.getChatId(), msg);
+        if (!(msg.getMessage().length() >1000)) {
+            redisUtil.zsetAdd("history:" + msg.getChatId(), msg);
+        }
     }
 
     @Async
     public void insertToMysql(Message msg) {
-        messageMapper.insert(msg);
+        if (!(msg.getMessage().length() >1000)) {
+            messageMapper.insert(msg);
+        }
     }
 
     @Async
