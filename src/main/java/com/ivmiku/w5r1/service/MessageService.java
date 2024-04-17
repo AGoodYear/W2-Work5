@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -52,8 +53,8 @@ public class MessageService {
     }
 
     @Async
-    public void insertToRedis(Message msg) {
-        redisUtil.listAdd("history:" + msg.getChatId(), msg);
+    public void insertToRedis(Message msg) throws ParseException {
+        redisUtil.zsetAdd("history:" + msg.getChatId(), msg);
     }
 
     @Async
@@ -100,6 +101,16 @@ public class MessageService {
         } else {
             result.addAll(getChatHistoryFromRedis(chatId, start, end));
         }
+        return result;
+    }
+
+    public List<Message> getChatHistoryByDate(String user1Id, String user2Id, String startDate, String endDate) throws ParseException {
+        List<Message> result = new ArrayList<>();
+        String chatId = getChatId(user1Id, user2Id);
+        result.addAll(redisUtil.zsetGetByDate(chatId, startDate, endDate));
+        QueryWrapper<Message> queryWrapper = new QueryWrapper<>();
+        queryWrapper.between("date", startDate, endDate);
+        result.addAll(messageMapper.selectList(queryWrapper));
         return result;
     }
 

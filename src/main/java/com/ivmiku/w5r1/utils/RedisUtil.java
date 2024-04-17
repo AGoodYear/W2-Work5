@@ -8,6 +8,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -46,5 +47,35 @@ public class RedisUtil {
 
     public Object rightPop(String key) {
         return redisTemplate.opsForList().rightPop(key);
+    }
+
+    public void zsetAdd(String key, Message value) throws ParseException {
+        redisTemplate.opsForZSet().add(key, value, DateUtil.toTimeSig(value.getDate()));
+    }
+
+    public List<Message> zsetGet(String key, int s, int e) {
+        Set<Object> list = redisTemplate.opsForZSet().range(key, s, e);
+        List<Message> result = new ArrayList<>();
+        if (list != null) {
+            for (Object json : list) {
+                result.add(JSON.parseObject(JSON.toJSONString(json), Message.class));
+            }
+        }
+        return result;
+    }
+
+    public Long getzsetSize(String key) {
+        return redisTemplate.opsForZSet().size(key);
+    }
+
+    public List<Message> zsetGetByDate(String key, String startDate, String endDate) throws ParseException {
+        Set<Object> list = redisTemplate.opsForZSet().reverseRange(key, DateUtil.toTimeSig(startDate), DateUtil.toTimeSig(endDate));
+        List<Message> result = new ArrayList<>();
+        if (list != null) {
+            for (Object json : list) {
+                result.add(JSON.parseObject(JSON.toJSONString(json), Message.class));
+            }
+        }
+        return result;
     }
 }

@@ -22,6 +22,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Controller;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -96,7 +97,7 @@ public class WebSocketServer implements ApplicationContextAware {
         throwable.printStackTrace();
     }
 
-    public void sendToUser(Message msg) throws IOException {
+    public void sendToUser(Message msg) throws IOException, ParseException {
         if (sessionMap.containsKey(msg.getToId())){
             sessionMap.get(msg.getToId()).getBasicRemote().sendText(JSON.toJSONString(msg));
         }
@@ -107,7 +108,7 @@ public class WebSocketServer implements ApplicationContextAware {
         messageService.insertToRedis(msg);
     }
 
-    public void sendToPublic(Message msg) throws IOException {
+    public void sendToPublic(Message msg) throws IOException, ParseException {
         for (Session session : sessionMap.values()) {
             session.getBasicRemote().sendText(JSON.toJSONString(msg));
         }
@@ -122,7 +123,7 @@ public class WebSocketServer implements ApplicationContextAware {
 
     @RabbitHandler
     @RabbitListener(queuesToDeclare = @Queue("message_queue"))
-    public void sendMsg(String message) throws IOException {
+    public void sendMsg(String message) throws IOException, ParseException {
         Message msg = JSON.parseObject(message, Message.class);
         if (!Objects.equals(msg.getToId(), "public")) {
             sendToUser(msg);

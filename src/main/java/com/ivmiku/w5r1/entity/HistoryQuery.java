@@ -8,4 +8,6 @@ public class HistoryQuery {
     private String user2Id;
     private int page;
     private int size;
+    private String startDate;
+    private String endDate;
 }
