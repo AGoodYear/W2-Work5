@@ -72,7 +72,7 @@ public class MessageService {
     }
 
     public List<Message> getUnreadMsg(String userId) {
-        List<Message> result = redisUtil.listGet(userId, 0, -1);
+        List<Message> result = redisUtil.listGet("unread:" + userId, 0, -1);
         redisUtil.listClear(userId);
         return result;
     }
