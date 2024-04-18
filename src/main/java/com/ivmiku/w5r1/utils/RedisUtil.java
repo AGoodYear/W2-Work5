@@ -69,7 +69,7 @@ public class RedisUtil {
     }
 
     public List<Message> zsetGetByDate(String key, String startDate, String endDate) throws ParseException {
-        Set<Object> list = redisTemplate.opsForZSet().reverseRange(key, DateUtil.toTimeSig(startDate), DateUtil.toTimeSig(endDate));
+        Set<Object> list = redisTemplate.opsForZSet().reverseRangeByScore(key, DateUtil.toTimeSig(startDate), DateUtil.toTimeSig(endDate));
         List<Message> result = new ArrayList<>();
         if (list != null) {
             for (Object json : list) {

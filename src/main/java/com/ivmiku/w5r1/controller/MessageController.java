@@ -18,14 +18,15 @@ public class MessageController {
 
     @PostMapping("/history")
     public Object getChatHistory(@RequestBody HistoryQuery input) throws ParseException {
-        if (input.getPage() <= 0 || input.getSize() <=0) {
-            return Result.error("请输入合法分页参数");
-        }
         Result result = Result.ok();
         if (input.getStartDate() != null && input.getEndDate() != null) {
             result.setData(messageService.getChatHistoryByDate(input.getUser1Id(), input.getUser2Id(), input.getStartDate(), input.getEndDate()));
         } else {
-            result.setData(messageService.getChatHistory(input.getUser1Id(), input.getUser2Id(), input.getPage(), input.getSize()));
+            if (input.getPage() <= 0 || input.getSize() <=0) {
+                return Result.error("请输入合法分页参数");
+            } else {
+                result.setData(messageService.getChatHistory(input.getUser1Id(), input.getUser2Id(), input.getPage(), input.getSize()));
+            }
         }
         return JSON.toJSON(result);
     }
