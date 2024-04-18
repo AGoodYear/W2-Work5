@@ -1,5 +1,6 @@
 package com.ivmiku.w5r1.controller;
 
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.ivmiku.w5r1.entity.FriendQuery;
 import com.ivmiku.w5r1.entity.IgnoreUser;
 import com.ivmiku.w5r1.entity.Result;
@@ -7,6 +8,7 @@ import com.ivmiku.w5r1.service.RelationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+@SaCheckLogin
 @RestController
 @RequestMapping("/api/relation")
 public class RelationController {

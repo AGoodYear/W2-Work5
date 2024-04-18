@@ -1,5 +1,6 @@
 package com.ivmiku.w5r1.controller;
 
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.alibaba.fastjson2.JSON;
 import com.ivmiku.w5r1.entity.HistoryQuery;
 import com.ivmiku.w5r1.entity.Message;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
 
+@SaCheckLogin
 @RestController
 @RequestMapping("/api/message")
 public class MessageController {
