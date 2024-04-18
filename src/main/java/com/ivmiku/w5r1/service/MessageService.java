@@ -55,6 +55,9 @@ public class MessageService {
     @Async
     public void insertToRedis(Message msg) throws ParseException {
         if (!(msg.getMessage().length() >1000)) {
+            if (redisUtil.getZsetSize("history:" + msg.getChatId()) >= 50) {
+                insertToMysql(redisUtil.zsetRightPop("history:" + msg.getChatId()));
+            }
             redisUtil.zsetAdd("history:" + msg.getChatId(), msg);
         }
     }

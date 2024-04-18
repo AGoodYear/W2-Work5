@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 @Component
@@ -77,5 +78,13 @@ public class RedisUtil {
             }
         }
         return result;
+    }
+
+    public Message zsetRightPop(String key) {
+        return JSON.parseObject(JSON.toJSONString(Objects.requireNonNull(redisTemplate.opsForZSet().popMin(key)).getValue()), Message.class);
+    }
+
+    public Long getZsetSize(String key) {
+        return redisTemplate.opsForZSet().size(key);
     }
 }
