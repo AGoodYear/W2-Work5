@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 @Component
 public class RedisUtil {
@@ -55,7 +56,7 @@ public class RedisUtil {
     }
 
     public List<Message> zsetGet(String key, int s, int e) {
-        Set<Object> list = redisTemplate.opsForZSet().range(key, s, e);
+        Set<Object> list = redisTemplate.opsForZSet().reverseRange(key, s, e);
         List<Message> result = new ArrayList<>();
         if (list != null) {
             for (Object json : list) {
@@ -69,8 +70,8 @@ public class RedisUtil {
         return redisTemplate.opsForZSet().size(key);
     }
 
-    public List<Message> zsetGetByDate(String key, String startDate, String endDate) throws ParseException {
-        Set<Object> list = redisTemplate.opsForZSet().reverseRangeByScore(key, DateUtil.toTimeSig(startDate), DateUtil.toTimeSig(endDate));
+    public List<Message> zsetGetByDate(String key, String startDate, String endDate, int offset, int count) throws ParseException {
+        Set<Object> list = redisTemplate.opsForZSet().reverseRangeByScore(key, DateUtil.toTimeSig(startDate), DateUtil.toTimeSig(endDate), offset, count);
         List<Message> result = new ArrayList<>();
         if (list != null) {
             for (Object json : list) {
@@ -86,5 +87,20 @@ public class RedisUtil {
 
     public Long getZsetSize(String key) {
         return redisTemplate.opsForZSet().size(key);
+    }
+
+    public void setExpireTime(String key) {
+        if (redisTemplate.opsForValue().getOperations().getExpire(key) > 0) {
+            redisTemplate.expire(key, 3, TimeUnit.DAYS);
+        }
+    }
+
+    public void refreshExpire(String key) {
+        redisTemplate.persist(key);
+        redisTemplate.expire(key, 3, TimeUnit.DAYS);
+    }
+
+    public boolean ifExist(String key) {
+        return Boolean.TRUE.equals(redisTemplate.hasKey(key));
     }
 }

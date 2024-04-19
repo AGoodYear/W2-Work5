@@ -56,9 +56,10 @@ public class MessageService {
     public void insertToRedis(Message msg) throws ParseException {
         if (!(msg.getMessage().length() >1000)) {
             if (redisUtil.getZsetSize("history:" + msg.getChatId()) >= 50) {
-                insertToMysql(redisUtil.zsetRightPop("history:" + msg.getChatId()));
+                redisUtil.zsetRightPop("history:" + msg.getChatId());
             }
             redisUtil.zsetAdd("history:" + msg.getChatId(), msg);
+            redisUtil.setExpireTime("history:" + msg.getChatId());
         }
     }
 
@@ -101,40 +102,35 @@ public class MessageService {
         return redisUtil.zsetGet("history:" + chatId, s, e);
     }
 
-    public List<Message> getChatHistory(String user1Id, String user2Id, int page, int size) {
+    public List<Message> getChatHistory(String user1Id, String user2Id, int page, int size) throws ParseException {
         int start = page * size - size;
         int end = page * size - 1;
         String chatId = getChatId(user1Id, user2Id);
-        Long redisSize = redisUtil.getzsetSize("history:" + chatId);
-        List<Message> result = new ArrayList<>();
-        if (end > redisSize - 1) {
-            if (start >redisSize - 1 ) {
-                result.addAll(getChatHistoryFromDB(chatId, (int) (((end - redisSize) / size) + 1), size));
-            } else {
-                result.addAll(getChatHistoryFromRedis(chatId, start, (int) (redisSize-1)));
-                result.addAll(getChatHistoryFromDB(chatId, (int) (((end - redisSize) / size) + 1),size));
-            }
-        } else {
-            result.addAll(getChatHistoryFromRedis(chatId, start, end));
+        loadCache(chatId);
+        List<Message> result = new ArrayList<>(redisUtil.zsetGet("history:" + chatId, start, end));
+        if ((end -start + 1) == result.size()) {
+            return result;
         }
+        int redisSize = result.size();
+        List<Message> dbList = getChatHistoryFromDB(chatId, ((end - result.size()) / size) + 1, size);
+        result.addAll(dbList.subList(redisSize, dbList.size()));
+        redisUtil.refreshExpire("history:" + chatId);
         return result;
     }
 
     public List<Message> getChatHistoryByDate(String user1Id, String user2Id, String startDate, String endDate, int page, int size) throws ParseException {
         int start = page * size - size;
         int end = page * size - 1;
-        List<Message> result = new ArrayList<>();
         String chatId = getChatId(user1Id, user2Id);
-        result.addAll(redisUtil.zsetGetByDate("history:" + chatId, startDate, endDate));
-        int redisSize = result.size();
-        if (end <= result.size()) {
-            return result.subList(start, end);
-        } else {
-            if (start <= result.size()-1) {
-                result = result.subList(start, result.size());
-            }
+        loadCache(chatId);
+        List<Message> result = new ArrayList<>(redisUtil.zsetGetByDate("history:" + chatId, startDate, endDate, start, size));
+        redisUtil.refreshExpire("history:" + chatId);
+        if (result.size() == (end - start + 1)) {
+            return result;
         }
-        result.addAll(getChatHistoryFromDB(chatId, ((end - redisSize) / size) + 1, size));
+        int redisSize = result.size();
+        List<Message> dbList = getChatHistoryFromDBByDate(chatId, ((end - result.size()) / size) + 1, size, startDate, endDate).subList(result.size(), size);
+        result.addAll(dbList.subList(redisSize, dbList.size()));
         return result;
     }
 
@@ -144,5 +140,14 @@ public class MessageService {
         queryWrapper.orderByDesc("id");
         Page<ChatId> page = new Page<>(current, size);
         return chatIdMapper.selectPage(page, queryWrapper).getRecords();
+    }
+
+    public void loadCache(String chatId) throws ParseException {
+        if (!redisUtil.ifExist("history:" + chatId)) {
+            List<Message> list = getChatHistoryFromDB(chatId, 1, 20);
+            for (Message message : list) {
+                insertToRedis(message);
+            }
+        }
     }
 }

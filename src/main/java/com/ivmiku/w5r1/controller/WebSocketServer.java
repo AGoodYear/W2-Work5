@@ -105,6 +105,7 @@ public class WebSocketServer implements ApplicationContextAware {
             messageService.insertUnreadMsg(msg.getToId(), msg);
         }
         msg.setChatId(messageService.getChatId(msg.getFromId(), msg.getToId()));
+        messageService.insertToMysql(msg);
         messageService.insertToRedis(msg);
     }
 
@@ -113,6 +114,7 @@ public class WebSocketServer implements ApplicationContextAware {
             session.getBasicRemote().sendText(JSON.toJSONString(msg));
         }
         msg.setChatId(messageService.getChatId(msg.getFromId(), msg.getToId()));
+        messageService.insertToMysql(msg);
         messageService.insertToRedis(msg);
     }
 
