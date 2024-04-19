@@ -88,6 +88,15 @@ public class MessageService {
         return messageMapper.selectPage(page, queryWrapper).getRecords();
     }
 
+    public List<Message> getChatHistoryFromDBByDate(String chatId, int current, int size, String startDate, String endDate) {
+        QueryWrapper<Message> queryWrapper = new QueryWrapper<>();
+        queryWrapper.between("date", startDate, endDate);
+        Page<Message> page = new Page<>(current, size);
+        queryWrapper.eq("chat_id", chatId);
+        queryWrapper.orderByDesc("date");
+        return messageMapper.selectPage(page, queryWrapper).getRecords();
+    }
+
     public List<Message> getChatHistoryFromRedis(String chatId, int s, int e) {
         return redisUtil.zsetGet("history:" + chatId, s, e);
     }
@@ -111,13 +120,21 @@ public class MessageService {
         return result;
     }
 
-    public List<Message> getChatHistoryByDate(String user1Id, String user2Id, String startDate, String endDate) throws ParseException {
+    public List<Message> getChatHistoryByDate(String user1Id, String user2Id, String startDate, String endDate, int page, int size) throws ParseException {
+        int start = page * size - size;
+        int end = page * size - 1;
         List<Message> result = new ArrayList<>();
         String chatId = getChatId(user1Id, user2Id);
         result.addAll(redisUtil.zsetGetByDate("history:" + chatId, startDate, endDate));
-        QueryWrapper<Message> queryWrapper = new QueryWrapper<>();
-        queryWrapper.between("date", startDate, endDate);
-        result.addAll(messageMapper.selectList(queryWrapper));
+        int redisSize = result.size();
+        if (end <= result.size()) {
+            return result.subList(start, end);
+        } else {
+            if (start <= result.size()-1) {
+                result = result.subList(start, result.size());
+            }
+        }
+        result.addAll(getChatHistoryFromDB(chatId, ((end - redisSize) / size) + 1, size));
         return result;
     }
 

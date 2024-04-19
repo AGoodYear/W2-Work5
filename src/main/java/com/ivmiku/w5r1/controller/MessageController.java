@@ -22,7 +22,7 @@ public class MessageController {
     public Object getChatHistory(@RequestBody HistoryQuery input) throws ParseException {
         Result result = Result.ok();
         if (input.getStartDate() != null && input.getEndDate() != null) {
-            result.setData(messageService.getChatHistoryByDate(input.getUser1Id(), input.getUser2Id(), input.getStartDate(), input.getEndDate()));
+            result.setData(messageService.getChatHistoryByDate(input.getUser1Id(), input.getUser2Id(), input.getStartDate(), input.getEndDate(), input.getPage(), input.getSize()));
         } else {
             if (input.getPage() <= 0 || input.getSize() <=0) {
                 return Result.error("请输入合法分页参数");

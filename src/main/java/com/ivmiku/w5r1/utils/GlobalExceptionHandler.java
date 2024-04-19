@@ -41,6 +41,6 @@ public class GlobalExceptionHandler {
     @ResponseBody
     public Object exceptionHandler(Exception e) {
         log.error("Exception:" + e.getLocalizedMessage());
-        return JSON.toJSON(Result.error("服务器内部错误:" + e.getMessage()));
+        return JSON.toJSON(Result.error("服务器内部错误:" + e.getClass() + e.getMessage()));
     }
 }
