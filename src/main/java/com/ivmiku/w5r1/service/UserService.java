@@ -27,6 +27,9 @@ public class UserService {
 
     public String login(String username, String password) {
         User user = selectUserByname(username);
+        if (user == null) {
+            return null;
+        }
         String encrypted = PasswordUtil.encrypt(password, user.getSalt());
         if (encrypted.equals(user.getPassword())) {
             StpUtil.login(user.getId());
