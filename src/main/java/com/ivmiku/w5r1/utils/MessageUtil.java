@@ -30,8 +30,4 @@ public class MessageUtil {
         return false;
     }
 
-    public static boolean ifIgnored(String userId, String toIgnore) {
-        List<String> list = relationService.getIgnoreUser(userId);
-        return list.contains(toIgnore);
-    }
 }

@@ -103,4 +103,14 @@ public class RedisUtil {
     public boolean ifExist(String key) {
         return Boolean.TRUE.equals(redisTemplate.hasKey(key));
     }
+
+    public List<String> getStringList(String key, int s, int e) {
+        List<Object> list = redisTemplate.opsForList().range(key, s, e);
+        List<String> result = new ArrayList<>();
+        assert list != null;
+        for (Object object : list) {
+            result.add((String) object);
+        }
+        return result;
+    }
 }

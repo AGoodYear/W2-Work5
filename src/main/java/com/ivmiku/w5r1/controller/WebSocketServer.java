@@ -5,6 +5,7 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.alibaba.fastjson2.JSON;
 import com.ivmiku.w5r1.entity.Message;
 import com.ivmiku.w5r1.service.MessageService;
+import com.ivmiku.w5r1.service.RelationService;
 import com.ivmiku.w5r1.utils.DateUtil;
 import com.ivmiku.w5r1.utils.MessageUtil;
 import jakarta.websocket.*;
@@ -45,6 +46,8 @@ public class WebSocketServer implements ApplicationContextAware {
 
     private RabbitTemplate rabbitTemplate;
 
+    private RelationService relationService;
+
     @OnMessage
     public void onMessage(String message, Session session) throws IOException {
         Message msg = JSON.parseObject(message, Message.class);
@@ -63,7 +66,7 @@ public class WebSocketServer implements ApplicationContextAware {
             }
             controlMap.put(msg.getFromId(), controlMap.get(msg.getFromId())+1);
         } else
-            if (MessageUtil.ifIgnored(msg.getFromId(), msg.getToId())) {
+            if (relationService.ifIgnored(msg.getToId(), msg.getFromId())) {
             session.getBasicRemote().sendText("您已被对方屏蔽");
         } else {
             rabbitTemplate.convertAndSend("message_queue", JSON.toJSONString(msg));
@@ -80,6 +83,7 @@ public class WebSocketServer implements ApplicationContextAware {
         }
         this.messageService = WebSocketServer.applicationContext.getBean(MessageService.class);
         this.rabbitTemplate = WebSocketServer.applicationContext.getBean(RabbitTemplate.class);
+        this.relationService = WebSocketServer.applicationContext.getBean(RelationService.class);
         sessionMap.put(userId, session);
         List<Message> unreadList = messageService.getUnreadMsg(userId);
         for(Message msg : unreadList) {
