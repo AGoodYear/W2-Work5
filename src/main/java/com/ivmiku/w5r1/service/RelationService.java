@@ -27,6 +27,9 @@ public class RelationService {
 
     public void IgnoreUser(String userId, String toIgnore) {
         blackListMapper.insert(new IgnoreUser(userId, toIgnore));
+        if  (redisUtil.ifExist("blacklist:" + userId)) {
+            redisUtil.listAdd("blacklist:" + userId, toIgnore);
+        }
     }
 
     public boolean ifIgnored(String userId, String ignoreId) {
