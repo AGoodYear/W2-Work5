@@ -7,6 +7,9 @@ import lombok.Data;
 
 import java.io.Serializable;
 
+/**
+ * @author Aurora
+ */
 @Data
 @TableName("message")
 public class Message implements Serializable {

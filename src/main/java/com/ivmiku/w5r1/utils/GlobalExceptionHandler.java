@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import java.sql.SQLException;
 import java.text.ParseException;
 
+/**
+ * @author Aurora
+ */
 @Slf4j
 @ControllerAdvice
 public class GlobalExceptionHandler {

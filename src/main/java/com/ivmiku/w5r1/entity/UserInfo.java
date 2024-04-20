@@ -3,6 +3,9 @@ package com.ivmiku.w5r1.entity;
 import com.alibaba.fastjson2.annotation.JSONType;
 import lombok.Data;
 
+/**
+ * @author Aurora
+ */
 @Data
 @JSONType(alphabetic = false)
 public class UserInfo {

@@ -14,6 +14,9 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * @author Aurora
+ */
 @Service
 public class RelationService {
     @Autowired
@@ -25,6 +28,11 @@ public class RelationService {
     @Autowired
     private RedisUtil redisUtil;
 
+    /**
+     * 屏蔽用户
+     * @param userId 用户id
+     * @param toIgnore 要屏蔽的用户id
+     */
     public void IgnoreUser(String userId, String toIgnore) {
         blackListMapper.insert(new IgnoreUser(userId, toIgnore));
         if  (redisUtil.ifExist("blacklist:" + userId)) {
@@ -32,6 +40,12 @@ public class RelationService {
         }
     }
 
+    /**
+     * 查询用户是否屏蔽了该用户
+     * @param userId 用户id
+     * @param ignoreId 要查询的id
+     * @return 查询结果
+     */
     public boolean ifIgnored(String userId, String ignoreId) {
         loadCache(userId);
         List<String> blackList = redisUtil.getStringList("blacklist:" + userId, 0, -1);
@@ -39,6 +53,11 @@ public class RelationService {
         return blackList.contains(ignoreId);
     }
 
+    /**
+     * 加为好友
+     * @param user1Id 用户id
+     * @param user2Id 用户id
+     */
     public void makeFriend(String user1Id, String user2Id) {
         String id1, id2;
         if (user1Id.compareTo(user2Id) < 0) {
@@ -51,6 +70,13 @@ public class RelationService {
         friendMapper.insert(new Friend(id1, id2));
     }
 
+    /**
+     * 好友列表
+     * @param userId 用户id
+     * @param current 分页参数
+     * @param size 分页参数
+     * @return 查询结果
+     */
     public List<Friend> getFriendList(String userId, int current, int size) {
         QueryWrapper<Friend> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user1_id", userId).or().eq("user2_id", userId);
@@ -58,6 +84,10 @@ public class RelationService {
         return friendMapper.selectPage(page, queryWrapper).getRecords();
     }
 
+    /**
+     * 加载缓存
+     * @param userId 用户id
+     */
     public void loadCache(String userId) {
         if (!redisUtil.ifExist("blacklist:" + userId)) {
             QueryWrapper<IgnoreUser> queryWrapper = new QueryWrapper<>();

@@ -9,6 +9,10 @@ import org.springframework.stereotype.Controller;
 
 import java.util.List;
 
+/**
+ * 敏感词检测
+ * @author Aurora
+ */
 @Component
 public class MessageUtil {
     private static final String[] SENSITIVE = {"你妈", "你妈逼的"};
@@ -19,6 +23,11 @@ public class MessageUtil {
         MessageUtil.relationService = relationService;
     }
 
+    /**
+     * 查看发送的信息是否含有敏感词
+     * @param message 要发送的信息
+     * @return 检查结果
+     */
     public static boolean checkMessage(String message) {
         if (message != null) {
             for(String keyword : SENSITIVE) {

@@ -5,7 +5,16 @@ import cn.dev33.satoken.secure.SaSecureUtil;
 
 import java.util.Random;
 
+/**
+ * 加密相关
+ * @author Aurora
+ */
 public class PasswordUtil {
+    /**
+     * 获取随机盐值
+     * @param n 位数
+     * @return 盐值
+     */
     public static String getSalt(int n) {
         char[] chars = ("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890!@#$%^&*()_+").toCharArray();
         StringBuilder sb = new StringBuilder();
@@ -17,6 +26,12 @@ public class PasswordUtil {
         return sb.toString();
     }
 
+    /**
+     * md5加密
+     * @param password 原密码
+     * @param salt 盐值
+     * @return 加密后的密码
+     */
     public static String encrypt(String password, String salt) {
         return SaSecureUtil.md5BySalt(password, salt);
     }

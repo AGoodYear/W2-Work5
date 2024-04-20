@@ -16,6 +16,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * @author Aurora
+ */
 @Service
 public class MessageService {
     @Autowired
@@ -27,6 +30,12 @@ public class MessageService {
     @Autowired
     private RedisUtil redisUtil;
 
+    /**
+     * 获取会话id
+     * @param user1Id 用户1id
+     * @param user2Id 用户2id
+     * @return 查询结果
+     */
     public String getChatId(String user1Id, String user2Id) {
         if (Objects.equals(user1Id, "public") || Objects.equals(user2Id, "public")) {
             return "0";
@@ -52,6 +61,11 @@ public class MessageService {
         return chatIdMapper.selectOne(queryWrapper).getId();
     }
 
+    /**
+     * 聊天记录写redis
+     * @param msg 要写入的信息
+     * @throws ParseException
+     */
     @Async
     public void insertToRedis(Message msg) throws ParseException {
         if (!(msg.getMessage().length() >1000)) {
@@ -63,6 +77,10 @@ public class MessageService {
         }
     }
 
+    /**
+     * 聊天记录写入mysql
+     * @param msg 要写入的消息
+     */
     @Async
     public void insertToMysql(Message msg) {
         if (!(msg.getMessage().length() >1000)) {
@@ -70,17 +88,34 @@ public class MessageService {
         }
     }
 
+    /**
+     * 未读消息写入redis
+     * @param userId 用户id
+     * @param msg 未读消息
+     */
     @Async
     public void insertUnreadMsg(String userId, Message msg) {
         redisUtil.listAdd("unread:" + userId, msg);
     }
 
+    /**
+     * 获取未读消息列表
+     * @param userId 用户id
+     * @return 查询结果
+     */
     public List<Message> getUnreadMsg(String userId) {
         List<Message> result = redisUtil.listGet("unread:" + userId, 0, -1);
         redisUtil.listClear(userId);
         return result;
     }
 
+    /**
+     * 从数据库获取聊天记录
+     * @param chatId 会话id
+     * @param current 分页参数
+     * @param size 分页参数
+     * @return 返回的查询结果
+     */
     public List<Message> getChatHistoryFromDB(String chatId, int current, int size) {
         QueryWrapper<Message> queryWrapper = new QueryWrapper<>();
         Page<Message> page = new Page<>(current, size);
@@ -89,6 +124,15 @@ public class MessageService {
         return messageMapper.selectPage(page, queryWrapper).getRecords();
     }
 
+    /**
+     * 从数据库获取聊天记录，查询一定范围内
+     * @param chatId 会话id
+     * @param current 分页参数
+     * @param size 分页参数
+     * @param startDate 开始日期
+     * @param endDate 结束日期
+     * @return 返回的查询结果
+     */
     public List<Message> getChatHistoryFromDBByDate(String chatId, int current, int size, String startDate, String endDate) {
         QueryWrapper<Message> queryWrapper = new QueryWrapper<>();
         queryWrapper.between("date", startDate, endDate);
@@ -98,10 +142,26 @@ public class MessageService {
         return messageMapper.selectPage(page, queryWrapper).getRecords();
     }
 
+    /**
+     * redis获取聊天记录
+     * @param chatId 会话id
+     * @param s 开始
+     * @param e 结束
+     * @return 查询结果
+     */
     public List<Message> getChatHistoryFromRedis(String chatId, int s, int e) {
         return redisUtil.zsetGet("history:" + chatId, s, e);
     }
 
+    /**
+     * 查询聊天记录
+     * @param user1Id 用户1id
+     * @param user2Id 用户2id
+     * @param page 分页参数
+     * @param size 分页参数
+     * @return 查询结果
+     * @throws ParseException
+     */
     public List<Message> getChatHistory(String user1Id, String user2Id, int page, int size) throws ParseException {
         int start = page * size - size;
         int end = page * size - 1;
@@ -118,6 +178,17 @@ public class MessageService {
         return result;
     }
 
+    /**
+     * 在一定时间范围内查询聊天记录
+     * @param user1Id 用户1id
+     * @param user2Id 用户2id
+     * @param startDate 开始日期
+     * @param endDate 结束日期
+     * @param page 分页参数
+     * @param size 分页参数
+     * @return 查询结果
+     * @throws ParseException
+     */
     public List<Message> getChatHistoryByDate(String user1Id, String user2Id, String startDate, String endDate, int page, int size) throws ParseException {
         int start = page * size - size;
         int end = page * size - 1;
@@ -134,6 +205,13 @@ public class MessageService {
         return result;
     }
 
+    /**
+     * 获取会话列表
+     * @param userId 用户id
+     * @param current 分页参数
+     * @param size 分页参数
+     * @return 查询结果
+     */
     public List<ChatId> getChatList(String userId, int current, int size) {
         QueryWrapper<ChatId> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user1_id", userId).or().eq("user2_id", userId);
@@ -142,6 +220,11 @@ public class MessageService {
         return chatIdMapper.selectPage(page, queryWrapper).getRecords();
     }
 
+    /**
+     * 加载聊天记录到redis
+     * @param chatId 会话id
+     * @throws ParseException
+     */
     public void loadCache(String chatId) throws ParseException {
         if (!redisUtil.ifExist("history:" + chatId)) {
             List<Message> list = getChatHistoryFromDB(chatId, 1, 20);

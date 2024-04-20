@@ -13,18 +13,32 @@ import org.springframework.stereotype.Service;
 
 import java.util.Objects;
 
+/**
+ * @author Aurora
+ */
 @Service
 public class UserService {
 
     @Autowired
     private UserMapper userMapper;
 
+    /**
+     * 根据用户名搜索用户
+     * @param username 用户名
+     * @return 用户实体
+     */
     public User selectUserByname(String username) {
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("username", username);
         return userMapper.selectOne(queryWrapper);
     }
 
+    /**
+     * 登录
+     * @param username 用户名
+     * @param password 密码
+     * @return token
+     */
     public String login(String username, String password) {
         User user = selectUserByname(username);
         if (user == null) {
@@ -39,6 +53,12 @@ public class UserService {
         }
     }
 
+    /**
+     * 注册
+     * @param username 用户名
+     * @param password 密码
+     * @return 注册结果
+     */
     public Result register(String username, String password) {
         User user = new User();
         user.setUsername(username);
@@ -52,6 +72,11 @@ public class UserService {
         return Result.ok();
     }
 
+    /**
+     * 获取用户信息
+     * @param userId 用户id
+     * @return 查询结果
+     */
     public Result getUserInfo(String userId) {
         Result result;
         User user;
